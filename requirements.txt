@@ -68,9 +68,7 @@ QtPy==1.10.0
 querystring-parser==1.2.4
 regex==2022.1.18
 requests==2.27.1
-requests-unixsocket==0.2.0
 scikit-learn 
-scikit-learn-intelex==2021.20210714.170431
 scipy 
 sklearn
 smart-open==5.2.1
