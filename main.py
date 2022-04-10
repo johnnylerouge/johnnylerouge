@@ -11,71 +11,105 @@ from pydantic import BaseModel
 from pyrsistent import freeze
 import joblib, os
 from scipy.sparse import hstack
-
-
+import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import scipy
+import sklearn
+from sklearn.decomposition import PCA
+from nltk.stem import WordNetLemmatizer
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.multiclass import OneVsRestClassifier
+from nltk.corpus import stopwords
+from nltk.tokenize import ToktokTokenizer
+from nltk.corpus import stopwords
+from nltk.tokenize import ToktokTokenizer
+from scipy.sparse import hstack
+import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import jaccard_score
+from sklearn.neural_network import MLPClassifier
+from sklearn import svm
 from sklearn import preprocessing
 from spacy import load
+import re
+from bs4 import BeautifulSoup
+import string 
 
 app=FastAPI()
-preprocess = open('/home/jo/notebook/preprocess', 'rb')
-preprocess = joblib.load(preprocess)
-tfidf_X1 = open('/home/jo/notebook/tfidf_X1', 'rb')
-tfidf_X1 = joblib.load(tfidf_X1)
-tfidf_X2 = open('/home/jo/notebook/tfidf_X2', 'rb')
-tfidf_X2 = joblib.load(tfidf_X2)
-rfc = open('/home/jo/notebook/rfc', 'rb')
-rfc = joblib.load(rfc)
-binarizer = open('/home/jo/notebook/binarizer', 'rb')
-binarizer = joblib.load(binarizer)
+
+
+
+tfidf_X1=joblib.load('tfidf_X1')
+tfidf_X2=joblib.load('tfidf_X2')
+reg=joblib.load('reg')
+binarizer=joblib.load('binarizer')
+
+token=ToktokTokenizer()
+lemmatizer = WordNetLemmatizer()
+
+def preprocess(text):
+    text = BeautifulSoup(text, 'lxml')
+    text = text.get_text()
+    text = text.lower()
+    text = re.sub(r"what's", "what is ", text)
+    text = re.sub(r"\'s", " ", text)
+    text = re.sub(r"\'ve", " have ", text)
+    text = re.sub(r"can't", "can not ", text)
+    text = re.sub(r"n't", " not ", text)
+    text = re.sub(r"i'm", "i am ", text)
+    text = re.sub(r"\'re", " are ", text)
+    text = re.sub(r"\'d", " would ", text)
+    text = re.sub(r"\'ll", " will ", text)
+    text = re.sub(r"\'scuse", " excuse ", text)
+    text = re.sub(r"\'\n", " ", text)
+    text = re.sub(r"\'\xa0", " ", text)
+    text = re.sub('\s+', ' ', text)    
+    text = text.strip(' ')
+    punct = set(string.punctuation) 
+    text = "".join([ch for ch in text if ch not in punct])
+    stop_words = set(stopwords.words('english'))
+    
+    words=token.tokenize(text)
+    
+    text=[word for word in words if not word in stop_words]
+    text=' '.join(map(str, text))
+    text=token.tokenize(text)
+    lemm_list=[]
+    for word in text:
+        x=lemmatizer.lemmatize(word, pos='v')
+        lemm_list.append(x)
+    text=' '.join(map(str, lemm_list))
+    return text
+
+def tags_normalization(text):
+    text=text.replace('<','').replace('>', ' ')
+    return text
+
+
 
 class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Optional[bool] = None
-
-class Post(BaseModel):
-    title : str
     content : str
+    title : str
 
-@app.post('/predict')
-def display_post(message : Post):
-    unseen_data={'Title': preprocess(message.title), 'Body': preprocess(message.content)}
-    unseen_data=pandas.DataFrame(data=unseen_data, index=[0])
+
+
+@app.get("/predict")
+def tag_predict(x: Item.content, y: Item.title):
+    unseen_data={'Title': preprocess(y), 'Body': preprocess(x)}
+    unseen_data=pd.DataFrame(data=unseen_data, index=[0])
     tfidf_X1=tfidf_X1.transform(unseen_data.Body)
     tfidf_X2=tfidf_X2.transform(unseen_data.Title)
     tfidf_unseen=hstack([tfidf_X1, tfidf_X2])
-    y_pred=rfc.predict(tfidf_unseen)
+    y_pred=reg.predict(tfidf_unseen)
     pred_list=binarizer.inverse_transform(y_pred)
-    pred_list=list([x for x in pred_list for x in x])
-    str1=''
-    for w in pred_list:
-        str1+=w
-        tag=str1
-    return{tag}
-
-@app.get('/')
-def display_post(message : Post):
-    message.title="Using merge in python snowflake connector with pandas dataframe as a source"
-    message.content="I'm retrieving data from an API and converting the data into a pandas dataframe.I'm using python-snowflake connector to send this data into my snowflake schema as a table.I want to use merge instead of sending the duplicate data into my snowflake table. Sample data I'm retrieving from API:"
-    unseen_data={'Title': preprocess(message.title), 'Body': preprocess(message.content)}
-    unseen_data=pandas.DataFrame(data=unseen_data, index=[0])
-    tfidf_X1=tfidf_X1.transform(unseen_data.Body)
-    tfidf_X2=tfidf_X2.transform(unseen_data.Title)
-    tfidf_unseen=hstack([tfidf_X1, tfidf_X2])
-    y_pred=rfc.predict(tfidf_unseen)
-    pred_list=binarizer.inverse_transform(y_pred)
-    pred_list=list([x for x in pred_list for x in x])
-    str1=''
-    for w in pred_list:
-        str1+=w
-        tag=str1
-    return{tag}
+    return {"predicted tags": pred_list}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
 
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
