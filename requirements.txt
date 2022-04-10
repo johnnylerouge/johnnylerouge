@@ -45,8 +45,6 @@ jupyter-server==1.10.2
 jupyterlab==3.1.7
 langcodes==3.3.0
 lxml==4.6.3
-Mako==1.2.0
-mkl-service==2.4.0
 munkres==1.1.4
 murmurhash==1.0.6
 nbclassic==0.3.1
