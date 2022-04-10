@@ -97,7 +97,7 @@ class Item(BaseModel):
 
 
 @app.get("/predict")
-def tag_predict(x: Item.content, y: Item.title):
+def tag_predict(x: Item.content, y: Item.title, tfidf_X1, tfidf_X2):
     unseen_data={'Title': preprocess(y), 'Body': preprocess(x)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
     tfidf_X1=tfidf_X1.transform(unseen_data.Body)
