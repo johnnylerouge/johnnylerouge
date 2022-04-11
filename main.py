@@ -5,7 +5,6 @@ from anyio import open_signal_receiver
 from nbformat import read
 import pandas
 import numpy
-import plotly
 from fastapi import Body, FastAPI
 from pydantic import BaseModel
 from pyrsistent import freeze
@@ -18,9 +17,6 @@ import scipy
 import sklearn
 from sklearn.decomposition import PCA
 from nltk.stem import WordNetLemmatizer
-from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.linear_model import PassiveAggressiveClassifier
-from sklearn.multiclass import OneVsRestClassifier
 from nltk.corpus import stopwords
 from nltk.tokenize import ToktokTokenizer
 from nltk.corpus import stopwords
@@ -29,11 +25,7 @@ from scipy.sparse import hstack
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.metrics import jaccard_score
-from sklearn.neural_network import MLPClassifier
-from sklearn import svm
 from sklearn import preprocessing
-from spacy import load
 import re
 from bs4 import BeautifulSoup
 import string 
@@ -96,19 +88,17 @@ class Item(BaseModel):
 
 
 
-@app.get("/predict")
-def tag_predict(x: Item.content, y: Item.title, tfidf_X1, tfidf_X2):
-    unseen_data={'Title': preprocess(y), 'Body': preprocess(x)}
+@app.post("/predict")
+def tag_predict(question: Item, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
+    unseen_data={'Title': preprocess(question.title), 'Body': preprocess(question.content)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
-    tfidf_X1=tfidf_X1.transform(unseen_data.Body)
-    tfidf_X2=tfidf_X2.transform(unseen_data.Title)
-    tfidf_unseen=hstack([tfidf_X1, tfidf_X2])
+    tfidf_X=tfidf_X1.transform(unseen_data.Body)
+    tfidf_Y=tfidf_X2.transform(unseen_data.Title)
+    tfidf_unseen=hstack([tfidf_X, tfidf_Y])
     y_pred=reg.predict(tfidf_unseen)
     pred_list=binarizer.inverse_transform(y_pred)
+    print (pred_list)
     return {"predicted tags": pred_list}
-
-
-
 
 @app.get("/")
 def read_root():
