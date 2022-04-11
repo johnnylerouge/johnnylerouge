@@ -1,20 +1,9 @@
-from email import message
-import imp
-from typing import Optional
-from anyio import open_signal_receiver
-from nbformat import read
-import pandas
-import numpy
-from fastapi import Body, FastAPI
+from fastapi import FastAPI
 from pydantic import BaseModel
-from pyrsistent import freeze
-import joblib, os
+import joblib
 from scipy.sparse import hstack
-import numpy as np
 import pandas as pd
 import scipy.stats as stats
-import scipy
-import sklearn
 from sklearn.decomposition import PCA
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
@@ -22,13 +11,10 @@ from nltk.tokenize import ToktokTokenizer
 from nltk.corpus import stopwords
 from nltk.tokenize import ToktokTokenizer
 from scipy.sparse import hstack
-import nltk
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn import preprocessing
 import re
 from bs4 import BeautifulSoup
 import string 
+from fastapi import FastAPI
 
 app=FastAPI()
 
