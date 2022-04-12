@@ -73,11 +73,11 @@ class Item(BaseModel):
 
 
 @app.get("/")
-def tag_predict(Contenu : str, Titre : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
+def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
     unseen_data={'Title': preprocess(Titre), 'Body': preprocess(Contenu)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
-    tfidf_X=tfidf_X.transform(unseen_data.Body)
     tfidf_Y=tfidf_Y.transform(unseen_data.Title)
+    tfidf_X=tfidf_X.transform(unseen_data.Body)
     tfidf_unseen=hstack([tfidf_X, tfidf_Y])
     y_pred=reg.predict(tfidf_unseen)
     pred_list=binarizer.inverse_transform(y_pred)
