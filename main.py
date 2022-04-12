@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from pydantic import BaseModel
 import joblib
 from scipy.sparse import hstack
@@ -15,9 +15,8 @@ import re
 from bs4 import BeautifulSoup
 import string 
 from fastapi import FastAPI
-
+import gradio as gr
 app=FastAPI()
-
 
 
 tfidf_X1=joblib.load('tfidf_X1')
@@ -73,19 +72,22 @@ class Item(BaseModel):
     title : str
 
 
-
-@app.post("/predict")
-def tag_predict(question: Item, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
-    unseen_data={'Title': preprocess(question.title), 'Body': preprocess(question.content)}
+@app.get("/")
+def tag_predict(Contenu : str, Titre : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
+    unseen_data={'Title': preprocess(Titre), 'Body': preprocess(Contenu)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
-    tfidf_X=tfidf_X1.transform(unseen_data.Body)
-    tfidf_Y=tfidf_X2.transform(unseen_data.Title)
+    tfidf_X=tfidf_X.transform(unseen_data.Body)
+    tfidf_Y=tfidf_Y.transform(unseen_data.Title)
     tfidf_unseen=hstack([tfidf_X, tfidf_Y])
     y_pred=reg.predict(tfidf_unseen)
     pred_list=binarizer.inverse_transform(y_pred)
     print (pred_list)
-    return {"predicted tags": pred_list}
+    return pred_list
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+iface=gr.Interface(
+    fn=tag_predict,
+    inputs=["text", gr.inputs.Textbox(lines=5, placeholder="Veuillez rédiger votre question ici...")],
+    outputs=["text"],)
+
+iface.launch(share=True)
+
