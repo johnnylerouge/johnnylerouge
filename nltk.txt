@@ -1,6 +1,5 @@
 punkt
 stopwords
 wordnet
-wordnet
 pros_cons
 reuters
