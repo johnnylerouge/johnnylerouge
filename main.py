@@ -89,5 +89,6 @@ iface=gr.Interface(
     inputs=["text", gr.inputs.Textbox(lines=5, placeholder="Veuillez rédiger votre question ici...")],
     outputs=["text"],)
 
-iface.launch(share=True)
+iface.launch(inline=False, share=True)
+
 
