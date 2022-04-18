@@ -74,7 +74,9 @@ class Item(BaseModel):
 
 @app.get("/")
 def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
-    tags=[]
+    Titre = "How to enumerate an enum"
+    Contenu = "How can you enumerate an enum in C#? E.g. the following code does not compile:"
+
     unseen_data={'Title': preprocess(Titre), 'Body': preprocess(Contenu)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
     tfidf_Y=tfidf_Y.transform(unseen_data.Title)
@@ -82,15 +84,5 @@ def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
     tfidf_unseen=hstack([tfidf_X, tfidf_Y])
     y_pred=reg.predict(tfidf_unseen)
     pred_list=binarizer.inverse_transform(y_pred)
-    for item in pred_list:
-        for word in item:
-            tags.append(word)
     return list(sum(pred_list, ()))
-    
-iface=gr.Interface(
-    fn=tag_predict,
-    inputs=["text", gr.inputs.Textbox(lines=5)],
-    outputs=["text"],)
-
-iface.launch(inline=False, share=True)
-
+  
