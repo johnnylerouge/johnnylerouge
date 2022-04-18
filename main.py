@@ -73,7 +73,8 @@ class Item(BaseModel):
 
 
 @app.get("/")
-def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2, tags=[]):
+def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2):
+    tags=[]
     unseen_data={'Title': preprocess(Titre), 'Body': preprocess(Contenu)}
     unseen_data=pd.DataFrame(data=unseen_data, index=[0])
     tfidf_Y=tfidf_Y.transform(unseen_data.Title)
@@ -84,11 +85,11 @@ def tag_predict(Titre : str, Contenu : str, tfidf_X=tfidf_X1, tfidf_Y=tfidf_X2, 
     for item in pred_list:
         for word in item:
             tags.append(word)
-    return tags
+    return list(sum(pred_list, ()))
     
 iface=gr.Interface(
     fn=tag_predict,
-    inputs=["text", gr.inputs.Textbox(lines=5, placeholder="Veuillez rédiger votre question ici...")],
+    inputs=["text", gr.inputs.Textbox(lines=5)],
     outputs=["text"],)
 
 iface.launch(inline=False, share=True)
